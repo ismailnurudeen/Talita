@@ -118,7 +118,7 @@ class _HomePageState extends State<HomePage> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.all(Radius.circular(30)),
                   child: Image.network(
-                    api.getPosterUrl(
+                    api.getImageUrl(
                         path: movies[index].poster_path,
                         size: PosterSizes.w500),
                     fit: BoxFit.cover,
@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
               child: ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(30)),
                 child: Image.network(
-                  api.getPosterUrl(
+                  api.getImageUrl(
                       path: movies[index].poster_path, size: PosterSizes.w500),
                   fit: BoxFit.cover,
                   height: 200,
@@ -191,7 +191,7 @@ class _HomePageState extends State<HomePage> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.all(Radius.circular(30)),
                   child: Image.network(
-                    api.getPosterUrl(
+                    api.getImageUrl(
                         path: movies[index].poster_path,
                         size: PosterSizes.w500),
                     fit: BoxFit.cover,

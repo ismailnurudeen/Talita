@@ -17,7 +17,7 @@ class BookmarkPage extends StatelessWidget {
     return Container(
       child: Card(
           child: InkWell(
-        splashColor: Color(ColorRes.lightCornYellow),
+        splashColor: ColorRes.lightCornYellow,
         onTap: () {
           print("Bookmark Clicked");
         },
@@ -33,7 +33,7 @@ class BookmarkPage extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
               Text("$index Good Day",
-                  style: TextStyle(color: Color(ColorRes.greenAccent)))
+                  style: TextStyle(color:ColorRes.greenAccent))
             ],
           ),
         ),

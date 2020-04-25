@@ -8,6 +8,7 @@ import 'package:talita/image_config.dart';
 import 'package:talita/models/index.dart';
 import 'package:talita/movie_details_page.dart';
 import 'package:talita/resources.dart';
+import 'package:talita/search_page.dart';
 import 'models/movie.dart';
 import 'models/movie_response.dart';
 
@@ -40,7 +41,7 @@ class _HomePage2State extends State<HomePage2> {
   Widget build(BuildContext context) {
     final tabPages = <Widget>[
       _moviesTabPage(),
-      _searchTabPage(),
+      SearchPage(movies: movies),
       BookmarkPage()
     ];
 
@@ -87,7 +88,7 @@ class _HomePage2State extends State<HomePage2> {
                 fontSize: 18,
                 fontFamily: "Ubuntu",
                 fontWeight: FontWeight.bold,
-                color: Color(ColorRes.greenAccent)),
+                color: ColorRes.greenAccent),
           ),
         ),
         SizedBox(
@@ -109,7 +110,7 @@ class _HomePage2State extends State<HomePage2> {
                 fontSize: 18,
                 fontFamily: "Ubuntu",
                 fontWeight: FontWeight.bold,
-                color: Color(ColorRes.greenAccent)),
+                color: ColorRes.greenAccent),
           ),
         ),
         SizedBox(
@@ -130,7 +131,7 @@ class _HomePage2State extends State<HomePage2> {
                 fontSize: 18,
                 fontFamily: "Ubuntu",
                 fontWeight: FontWeight.bold,
-                color: Color(ColorRes.greenAccent)),
+                color: ColorRes.greenAccent),
           ),
         ),
         SizedBox(
@@ -151,7 +152,7 @@ class _HomePage2State extends State<HomePage2> {
   _searchTabPage() {
     return Container(
       child: Center(
-        child: Icon(Icons.movie_filter),
+        child: Icon(Icons.filter),
       ),
     );
   }
@@ -283,7 +284,7 @@ class _HomePage2State extends State<HomePage2> {
   getMovieImageWidget(String posterPath) {
     if (posterPath != null) {
       return Image.network(
-        api.getPosterUrl(path: posterPath, size: PosterSizes.original),
+        api.getImageUrl(path: posterPath, size: PosterSizes.original),
         fit: BoxFit.cover,
         height: 200,
       );
@@ -310,7 +311,7 @@ _buildAppBar(BuildContext context, String title) {
     preferredSize: Size(double.infinity, 200),
     child: Container(
       width: MediaQuery.of(context).size.width,
-      height: 100,
+      height: 80,
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
@@ -329,14 +330,15 @@ _buildAppBar(BuildContext context, String title) {
           ),
         ),
         child: SafeArea(
-            child: Container(
-          margin: EdgeInsets.fromLTRB(0, 0, 0, 16),
-          child: Align(
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 18, color: Colors.white, fontFamily: "Ubuntu"),
+            child: Center(
+          child: Container(
+            child: Align(
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 18, color: Colors.white, fontFamily: "Ubuntu"),
+              ),
             ),
           ),
         )),

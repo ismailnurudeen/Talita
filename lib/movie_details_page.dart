@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
+// import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:talita/models/index.dart';
 import 'package:intl/intl.dart';
@@ -33,7 +33,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   Api api = Api();
   Movie_detail movieDetail;
   List<Video> movieVideos;
-
+  Cast_and_crew castAndCrew;
   var movieDetailLoadState = loadingState.loading;
   var movieVideosLoadState = loadingState.loading;
 
@@ -54,8 +54,8 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   initState() {
     super.initState();
     getMoviesDetails();
-    getMovieVideos();
     getMovieCastAndCrew();
+    getMovieVideos();
 
     _controller = YoutubePlayerController(
       initialVideoId: videoId,
@@ -72,6 +72,9 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
         headers: {"Accept": "application/json"});
 
     print('CAST AND CREW ${response.body}');
+    setState(() {
+      castAndCrew = Cast_and_crew.fromJson(jsonDecode(response.body));
+    });
   }
 
   Future<Movie_detail> getMoviesDetails() async {
@@ -137,7 +140,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
           image: DecorationImage(
             image: widget.movie.poster_path != null
                 ? NetworkImage(
-                    Api().getPosterUrl(path: widget.movie.poster_path))
+                    Api().getImageUrl(path: widget.movie.poster_path))
                 : AssetImage("images/movie-placeholder.gif"),
             fit: BoxFit.cover,
           ),
@@ -296,14 +299,14 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                           text: "Release date:\n",
                           style: TextStyle(
                               fontSize: 16,
-                              color: Color(ColorRes.richBlack),
+                              color: ColorRes.richBlack,
                               fontWeight: FontWeight.bold),
                           children: <TextSpan>[
                             TextSpan(
                               text: releaseDate,
                               style: TextStyle(
                                   fontSize: 16,
-                                  color: Color(ColorRes.pacificBlue),
+                                  color: ColorRes.pacificBlue,
                                   fontWeight: FontWeight.normal),
                             ),
                           ]),
@@ -313,14 +316,14 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                           text: "Runtime: ",
                           style: TextStyle(
                               fontSize: 16,
-                              color: Color(ColorRes.richBlack),
+                              color: ColorRes.richBlack,
                               fontWeight: FontWeight.bold),
                           children: <TextSpan>[
                             TextSpan(
-                              text: '${movieDetail?.runtime} mins',
+                              text: '${movieDetail?.runtime ?? ""} mins',
                               style: TextStyle(
                                   fontSize: 16,
-                                  color: Color(ColorRes.pacificBlue),
+                                  color: ColorRes.pacificBlue,
                                   fontWeight: FontWeight.normal),
                             ),
                           ]),
@@ -330,11 +333,11 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                           text: "Budget: ",
                           style: TextStyle(
                               fontSize: 16,
-                              color: Color(ColorRes.richBlack),
+                              color: ColorRes.richBlack,
                               fontWeight: FontWeight.bold),
                           children: <TextSpan>[
                             TextSpan(
-                              text: 'USD ${movieDetail?.budget}',
+                              text: 'USD ${movieDetail?.budget ?? ""}',
                               style: TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.normal),
                             ),
@@ -345,14 +348,14 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                           text: "Revenue:",
                           style: TextStyle(
                               fontSize: 16,
-                              color: Color(ColorRes.richBlack),
+                              color: ColorRes.richBlack,
                               fontWeight: FontWeight.bold),
                           children: <TextSpan>[
                             TextSpan(
-                              text: 'USD ${movieDetail?.revenue}',
+                              text: 'USD ${movieDetail?.revenue ?? ""}',
                               style: TextStyle(
                                   fontSize: 16,
-                                  color: Color(ColorRes.pacificBlue),
+                                  color: ColorRes.pacificBlue,
                                   fontWeight: FontWeight.normal),
                             ),
                           ]),
@@ -378,27 +381,60 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
               style: TextStyle(fontSize: 16.0),
             ),
           ),
-          Text("Cast & Crew",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          castAndCrew()
+          Text("Cast",
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: ColorRes.richBlack)),
+          Padding(
+              padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
+              child: castAndCrewLayout())
         ],
       ),
     );
   }
 
-  castAndCrew() {
+  castAndCrewLayout() {
     return SizedBox(
-      height: 55,
+      height: 180,
       child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: 10,
+          itemCount: castAndCrew?.cast?.length ?? 0,
           itemBuilder: (BuildContext context, int index) {
+            Cast cast = castAndCrew?.cast[index];
             return Container(
-              height: 50.0,
-              width: 50.0,
-              child: Card(
-                elevation: 8.0,
-                child: Center(child: Text("Cast $index")),
+              height: 100.0,
+              width: 85.0,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundImage: cast?.profile_path != null
+                        ? NetworkImage(
+                            api.getImageUrl(path: cast?.profile_path),
+                          )
+                        : AssetImage("images/cast_placeholder.png"),
+                  ),
+                  Text(
+                    cast?.name ?? "",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                    overflow: TextOverflow.clip,
+                    maxLines: 2,
+                  ),
+                  Text(
+                    cast?.character ?? "",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: ColorRes.pacificBlue),
+                    overflow: TextOverflow.fade,
+                    maxLines: 3,
+                  ),
+                ],
               ),
             );
           }),
@@ -408,7 +444,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   createYoutubePlayer() {
     return YoutubePlayer(
       aspectRatio: 1.0,
-      thumbnailUrl: api.getPosterUrl(path: widget.movie.poster_path),
+      thumbnailUrl: api.getImageUrl(path: widget.movie.poster_path),
       topActions: <Widget>[
         IconButton(
             color: Colors.white,
@@ -450,10 +486,10 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   }
 
   _launchUrl(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      print('Can\'t lanunch this url: $url');
-    }
+    // if (await canLaunch(url)) {
+    //   await launch(url);
+    // } else {
+    //   print('Can\'t lanunch this url: $url');
+    // }
   }
 }

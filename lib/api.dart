@@ -37,7 +37,7 @@ class Api {
   String getMovieVideos(String movieId) =>
       _api_base + 'movie/$movieId/videos?api_key=$_api_key&language=en-US';
 
-  String getPosterUrl({String path, String size = PosterSizes.original}) =>
+  String getImageUrl({String path, String size = PosterSizes.original}) =>
       ImageConfig.base_url + size + path;
 
   String getCastAndCrewEndPoint(String movieId) =>
