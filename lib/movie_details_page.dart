@@ -1,8 +1,11 @@
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:hive/hive.dart';
+import 'package:url_launcher/url_launcher.dart';
 // import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:talita/models/index.dart';
@@ -71,7 +74,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
         api.getCastAndCrewEndPoint('${widget.movie.id}'),
         headers: {"Accept": "application/json"});
 
-    print('CAST AND CREW ${response.body}');
+    // print('CAST AND CREW ${response.body}');
     setState(() {
       castAndCrew = Cast_and_crew.fromJson(jsonDecode(response.body));
     });
@@ -82,7 +85,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
         Uri.encodeFull(api.getMovieDetailsEndpoint('${widget.movie.id}')),
         headers: {"Accept": "application/json"});
 
-    // print("MOVIE DETAILS:\n${response.body}");
+    print("MOVIE DETAILS:\n${response.body}");
     setState(() {
       if (response.statusCode == 200) {
         movieDetail = Movie_detail.fromJson(jsonDecode(response.body));
@@ -170,19 +173,12 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                           onTap: () => Navigator.of(context).pop(),
                         ),
                         GestureDetector(
-                            child: isBookmarked
-                                ? Icon(Icons.bookmark, color: Colors.white)
-                                : Icon(Icons.bookmark_border,
-                                    color: Colors.white),
-                            onTap: () {
-                              globalKey.currentState.showSnackBar(SnackBar(
-                                  content: isBookmarked
-                                      ? Text("Bookmarked Removed")
-                                      : Text("Bookmarked")));
-                              setState(() {
-                                isBookmarked = !isBookmarked;
-                              });
-                            })
+                          child: isBookmarked
+                              ? Icon(Icons.bookmark, color: Colors.white)
+                              : Icon(Icons.bookmark_border,
+                                  color: Colors.white),
+                          onTap: _bookmarkMovie(),
+                        )
                       ],
                     ),
                     SizedBox(height: 50.0),
@@ -311,6 +307,9 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                             ),
                           ]),
                     ),
+                    SizedBox(
+                      height: 8,
+                    ),
                     Text.rich(
                       TextSpan(
                           text: "Runtime: ",
@@ -328,6 +327,9 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                             ),
                           ]),
                     ),
+                    SizedBox(
+                      height: 8,
+                    ),
                     Text.rich(
                       TextSpan(
                           text: "Budget: ",
@@ -339,13 +341,19 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                             TextSpan(
                               text: 'USD ${movieDetail?.budget ?? ""}',
                               style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.normal),
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal,
+                                color: ColorRes.pacificBlue,
+                              ),
                             ),
                           ]),
                     ),
+                    SizedBox(
+                      height: 8,
+                    ),
                     Text.rich(
                       TextSpan(
-                          text: "Revenue:",
+                          text: "Revenue: ",
                           style: TextStyle(
                               fontSize: 16,
                               color: ColorRes.richBlack,
@@ -368,9 +376,33 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                     "images/imdb.png",
                     height: 60,
                   ),
-                  onPressed: () => _launchUrl(movieDetail.homepage)),
+                  onPressed: () => _launchUrl(
+                      "https://www.imdb.com/title/${movieDetail.imdb_id}")),
             ),
           ]),
+          SizedBox(
+            height: 8,
+          ),
+          Text.rich(
+            TextSpan(
+                text: "Official Website:\n",
+                style: TextStyle(
+                    fontSize: 16,
+                    color: ColorRes.richBlack,
+                    fontWeight: FontWeight.bold),
+                children: <TextSpan>[
+                  TextSpan(
+                      text: movieDetail?.homepage ?? "",
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: ColorRes.pacificBlue,
+                          fontWeight: FontWeight.normal,
+                          decoration: TextDecoration.underline,
+                          decorationStyle: TextDecorationStyle.dashed),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => _launchUrl(movieDetail?.homepage)),
+                ]),
+          ),
           Divider(),
           Text("Storyline",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -399,6 +431,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
       height: 180,
       child: ListView.builder(
           scrollDirection: Axis.horizontal,
+          shrinkWrap: true,
           itemCount: castAndCrew?.cast?.length ?? 0,
           itemBuilder: (BuildContext context, int index) {
             Cast cast = castAndCrew?.cast[index];
@@ -472,6 +505,27 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     }
   }
 
+  var _box = Hive.box("app_data");
+  _bookmarkMovie() {
+    List<int> bookmarkIds = _box.get("bookmarks") ?? [];
+
+    bookmarkIds.forEach(print);
+    if (isBookmarked) {
+      bookmarkIds.remove(widget.movie.id);
+      // globalKey.currentState
+      //     .showSnackBar(SnackBar(content: Text("Bookmark Removed")));
+    } else {
+      bookmarkIds.add(widget.movie.id);
+      // globalKey.currentState
+      //     .showSnackBar(SnackBar(content: Text("Bookmarked")));
+    }
+    _box.put("bookmarks", bookmarkIds);
+
+    setState(() {
+      isBookmarked = !isBookmarked;
+    });
+  }
+
   @override
   void deactivate() {
     // Pauses video while navigating to next page.
@@ -482,14 +536,15 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   @override
   void dispose() {
     _controller.dispose();
+    // _box.close();
     super.dispose();
   }
 
   _launchUrl(String url) async {
-    // if (await canLaunch(url)) {
-    //   await launch(url);
-    // } else {
-    //   print('Can\'t lanunch this url: $url');
-    // }
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      print('Can\'t lanunch this url: $url');
+    }
   }
 }
