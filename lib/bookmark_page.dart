@@ -62,7 +62,7 @@ class BookmarkPage extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
                     children: <Widget>[
-                      Text("filteredList[index].title",
+                      Text("Movie $index",
                           style: TextStyle(
                               fontSize: 16,
                               color: ColorRes.richBlack,
@@ -73,7 +73,7 @@ class BookmarkPage extends StatelessWidget {
                         height: 8,
                       ),
                       Text(
-                        " filteredList[index].overview",
+                        "Overview",
                         overflow: TextOverflow.ellipsis,
                         maxLines: 2,
                       ),
@@ -91,7 +91,7 @@ class BookmarkPage extends StatelessWidget {
                             width: 8.0,
                           ),
                           Text(
-                            "filteredList[index].vote_average",
+                            "6.5",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ],

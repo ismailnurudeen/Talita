@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:talita/api.dart';
 import 'package:talita/bookmark_page.dart';
 import 'package:talita/image_config.dart';
@@ -9,6 +10,7 @@ import 'package:talita/models/index.dart';
 import 'package:talita/movie_details_page.dart';
 import 'package:talita/resources.dart';
 import 'package:talita/search_page.dart';
+import 'package:talita/utils.dart';
 import 'models/movie.dart';
 import 'models/movie_response.dart';
 
@@ -22,6 +24,7 @@ enum MovieCategory { popular, top, latest }
 class _HomePage2State extends State<HomePage2> {
   String appBarTitle = "Talita - Best Animated Movies";
   int _currentTabIndex = 0;
+
   List<Movie> movies = [];
   List<Movie> popularMovies = [];
   List<Movie> topMovies = [];
@@ -92,16 +95,23 @@ class _HomePage2State extends State<HomePage2> {
           ),
         ),
         SizedBox(
-          height: 270,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              return movieItemCard(MovieCategory.popular, index);
-            },
-            itemCount: popularMovies.length,
-          ),
+          height: 325,
+          child: popularMovies.isNotEmpty
+              ? ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    return movieItemCard(MovieCategory.popular, index);
+                  },
+                  itemCount: popularMovies.length,
+                )
+              : Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 100, horizontal: 100),
+                  child: CircularProgressIndicator(),
+                ),
         ),
+        // Top rated
         Padding(
           padding: const EdgeInsets.fromLTRB(16.0, 0, 0, 0),
           child: Text(
@@ -114,15 +124,22 @@ class _HomePage2State extends State<HomePage2> {
           ),
         ),
         SizedBox(
-          height: 270,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (context, index) {
-              return movieItemCard(MovieCategory.top, index);
-            },
-            itemCount: topMovies.length,
-          ),
+          height: 325,
+          child: topMovies.isNotEmpty
+              ? ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemBuilder: (context, index) {
+                    return movieItemCard(MovieCategory.top, index);
+                  },
+                  itemCount: topMovies.length,
+                )
+              : Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 100, horizontal: 100),
+                  child: CircularProgressIndicator(),
+                ),
         ),
+        // Upcoming
         Padding(
           padding: const EdgeInsets.fromLTRB(16.0, 0, 0, 0),
           child: Text(
@@ -135,33 +152,23 @@ class _HomePage2State extends State<HomePage2> {
           ),
         ),
         SizedBox(
-          height: 270,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (context, index) {
-              return movieItemCard(MovieCategory.latest, index);
-            },
-            itemCount: recentMovies.length,
-          ),
+          height: 325,
+          child: recentMovies.isNotEmpty
+              ? ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemBuilder: (context, index) {
+                    return movieItemCard(MovieCategory.latest, index);
+                  },
+                  itemCount: recentMovies.length,
+                )
+              : Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 100, horizontal: 100),
+                  child: CircularProgressIndicator(),
+                ),
         ),
         SizedBox(height: 16.0)
       ],
-    );
-  }
-
-  _searchTabPage() {
-    return Container(
-      child: Center(
-        child: Icon(Icons.filter),
-      ),
-    );
-  }
-
-  _bookmarkTabPage() {
-    Container(
-      child: Center(
-        child: Icon(Icons.movie_filter),
-      ),
     );
   }
 
@@ -240,7 +247,7 @@ class _HomePage2State extends State<HomePage2> {
     } else {
       currentMovie = movies[index];
     }
-
+    var releaseDate = Utils.getDateFromString(currentMovie.release_date);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
       child: GestureDetector(
@@ -274,7 +281,15 @@ class _HomePage2State extends State<HomePage2> {
                 ),
               ),
             ),
-            //Text(genreTags(currentMovie[index].genre_ids))
+            Text("(${releaseDate.year})",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Row(
+              children: <Widget>[
+                Icon(Icons.star, color: Colors.yellow),
+                Text('${currentMovie.vote_average}')
+              ],
+            ),
           ],
         ),
       ),

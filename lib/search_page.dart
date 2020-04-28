@@ -26,56 +26,60 @@ class _SearchPageState extends State<SearchPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 2.0, horizontal: 0.0),
-            margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-            decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.all(Radius.circular(20))),
-            child: TextField(
-              controller: _tec,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: "Search for movies",
-                hasFloatingPlaceholder: false,
-                border: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                errorBorder: InputBorder.none,
-                disabledBorder: InputBorder.none,
-                contentPadding:
-                    EdgeInsets.only(left: 15, bottom: 11, top: 11, right: 15),
-              ),
-              onSubmitted: (query) {
-                _performFilter(query.trim());
-              },
-              onChanged: (query) {
-                setState(() {
-                  if (query.isEmpty) {
-                    filteredList.clear();
-                    _contentNotFound = false;
-                  }
-                });
-              },
-            ),
-          ),
+          _searchField(),
           Expanded(
-            child: filteredList.isEmpty
-                ? (_contentNotFound
-                    ? Center(child: noSearchContent)
-                    : _searchHistoryWidget())
-                : ListView.builder(
-                    itemCount: filteredList.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return buildSearchResultItem(context, index);
-                    }),
-          ),
+              child: filteredList.isEmpty
+                  ? (_contentNotFound
+                      ? Center(child: noSearchContent)
+                      : _searchHistoryWidget())
+                  : ListView.builder(
+                      itemCount: filteredList.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return _buildSearchResultItem(context, index);
+                      })),
         ],
       ),
     );
   }
 
-  Widget buildSearchResultItem(BuildContext context, int index) {
+  Widget _searchField() {
+    return Container(
+      height: 50,
+      padding: EdgeInsets.symmetric(vertical: 2.0, horizontal: 0.0),
+      margin: EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
+      decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.all(Radius.circular(20))),
+      child: TextField(
+        controller: _tec,
+        decoration: InputDecoration(
+          prefixIcon: Icon(Icons.search),
+          hintText: "Search for movies",
+          hasFloatingPlaceholder: false,
+          border: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+          disabledBorder: InputBorder.none,
+          contentPadding:
+              EdgeInsets.only(left: 15, bottom: 11, top: 11, right: 15),
+        ),
+        onSubmitted: (query) {
+          _performFilter(query.trim());
+        },
+        onChanged: (query) {
+          setState(() {
+            if (query.isEmpty) {
+              filteredList.clear();
+              _contentNotFound = false;
+            }
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildSearchResultItem(BuildContext context, int index) {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
@@ -163,23 +167,27 @@ class _SearchPageState extends State<SearchPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(children: <Widget>[
-            Icon(Icons.history),
-            SizedBox(width: 4.0),
-            Text("Previous Searches"),
-            SizedBox(width: 4.0),
-            IconButton(
-              icon: Icon(Icons.clear_all),
-              onPressed: () => _clearSearchHistory(),
-            ),
-          ]),
+        Expanded(
+          flex: 1,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(children: <Widget>[
+              Icon(Icons.history),
+              SizedBox(width: 4.0),
+              Text("Previous Searches"),
+              SizedBox(width: 4.0),
+              IconButton(
+                icon: Icon(Icons.clear_all),
+                onPressed: () => _clearSearchHistory(),
+              ),
+            ]),
+          ),
         ),
         SizedBox(height: 8.0, child: Divider()),
         Expanded(
+          flex: 9,
           child: ListView.builder(
-              itemCount: searchHistory.length,
+              itemCount: searchHistory?.length ?? 0,
               itemBuilder: (context, index) {
                 return GestureDetector(
                   onTap: () {
@@ -201,7 +209,7 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 );
               }),
-        )
+        ),
       ],
     );
   }

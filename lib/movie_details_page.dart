@@ -31,7 +31,7 @@ class MovieDetailsPage extends StatefulWidget {
 enum loadingState { loading, error, success }
 
 class _MovieDetailsPageState extends State<MovieDetailsPage> {
-  final globalKey = GlobalKey<ScaffoldState>();
+  GlobalKey<ScaffoldState> globalKey = GlobalKey<ScaffoldState>();
   bool isBookmarked = false;
   Api api = Api();
   Movie_detail movieDetail;
@@ -63,9 +63,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     _controller = YoutubePlayerController(
       initialVideoId: videoId,
       flags: YoutubePlayerFlags(
-        autoPlay: false,
-        mute: false,
-      ),
+          autoPlay: false, controlsVisibleAtStart: true, mute: false),
     );
   }
 
@@ -177,7 +175,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                               ? Icon(Icons.bookmark, color: Colors.white)
                               : Icon(Icons.bookmark_border,
                                   color: Colors.white),
-                          onTap: _bookmarkMovie(),
+                          onTap: () => _bookmarkMovie(),
                         )
                       ],
                     ),
@@ -380,9 +378,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                       "https://www.imdb.com/title/${movieDetail.imdb_id}")),
             ),
           ]),
-          SizedBox(
-            height: 8,
-          ),
+          SizedBox(height: 8),
           Text.rich(
             TextSpan(
                 text: "Official Website:\n",
@@ -413,70 +409,78 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
               style: TextStyle(fontSize: 16.0),
             ),
           ),
-          Text("Cast",
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: ColorRes.richBlack)),
-          Padding(
-              padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
-              child: castAndCrewLayout())
+          Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text("Cast",
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: ColorRes.richBlack)),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(4, 0, 4, 0),
+                  child: castAndCrewLayout(),
+                ),
+              ]),
         ],
       ),
     );
   }
 
   castAndCrewLayout() {
-    return SizedBox(
-      height: 180,
-      child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          shrinkWrap: true,
-          itemCount: castAndCrew?.cast?.length ?? 0,
-          itemBuilder: (BuildContext context, int index) {
-            Cast cast = castAndCrew?.cast[index];
-            return Container(
-              height: 100.0,
-              width: 85.0,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundImage: cast?.profile_path != null
-                        ? NetworkImage(
-                            api.getImageUrl(path: cast?.profile_path),
-                          )
-                        : AssetImage("images/cast_placeholder.png"),
-                  ),
-                  Text(
-                    cast?.name ?? "",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+    return (castAndCrew != null && castAndCrew.cast.isNotEmpty)
+        ? SizedBox(
+            height: 170,
+            child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                shrinkWrap: true,
+                itemCount: castAndCrew?.cast?.length ?? 0,
+                itemBuilder: (BuildContext context, int index) {
+                  Cast cast = castAndCrew?.cast[index];
+                  return Container(
+                    height: 100.0,
+                    width: 85.0,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundImage: cast?.profile_path != null
+                              ? NetworkImage(
+                                  api.getImageUrl(path: cast?.profile_path),
+                                )
+                              : AssetImage("images/cast_placeholder.png"),
+                        ),
+                        Text(
+                          cast?.name ?? "",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                          overflow: TextOverflow.clip,
+                          maxLines: 2,
+                        ),
+                        Text(
+                          cast?.character ?? "",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: ColorRes.pacificBlue),
+                          overflow: TextOverflow.fade,
+                          maxLines:2,
+                        ),
+                      ],
                     ),
-                    overflow: TextOverflow.clip,
-                    maxLines: 2,
-                  ),
-                  Text(
-                    cast?.character ?? "",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: ColorRes.pacificBlue),
-                    overflow: TextOverflow.fade,
-                    maxLines: 3,
-                  ),
-                ],
-              ),
-            );
-          }),
-    );
+                  );
+                }),
+          )
+        : Text("No cast data...", style: TextStyle(fontSize: 16.0));
   }
 
   createYoutubePlayer() {
     return YoutubePlayer(
       aspectRatio: 1.0,
+      progressIndicatorColor: ColorRes.greenAccent,
       thumbnailUrl: api.getImageUrl(path: widget.movie.poster_path),
       topActions: <Widget>[
         IconButton(
@@ -507,17 +511,17 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
 
   var _box = Hive.box("app_data");
   _bookmarkMovie() {
-    List<int> bookmarkIds = _box.get("bookmarks") ?? [];
+    List bookmarkIds = _box.get("bookmarks") ?? [];
 
     bookmarkIds.forEach(print);
     if (isBookmarked) {
       bookmarkIds.remove(widget.movie.id);
-      // globalKey.currentState
-      //     .showSnackBar(SnackBar(content: Text("Bookmark Removed")));
+      globalKey.currentState
+          .showSnackBar(SnackBar(content: Text("Bookmark Removed")));
     } else {
       bookmarkIds.add(widget.movie.id);
-      // globalKey.currentState
-      //     .showSnackBar(SnackBar(content: Text("Bookmarked")));
+      globalKey.currentState
+          .showSnackBar(SnackBar(content: Text("Bookmarked")));
     }
     _box.put("bookmarks", bookmarkIds);
 
