@@ -1,30 +1,68 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:talita/resources.dart';
 
 import 'api.dart';
 import 'image_config.dart';
+import 'models/movie.dart';
 import 'movie_details_page.dart';
 
-class BookmarkPage extends StatelessWidget {
+class BookmarkPage extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    List<Widget> tenCards = List.generate(10, (index) {
-      return BuildBookmarkItem(context, index + 1);
-    });
-    return Scaffold(
-        body: ListView(
-      children: tenCards,
-    ));
+  _BookmarkPageState createState() => _BookmarkPageState();
+}
+
+class _BookmarkPageState extends State<BookmarkPage> {
+  Box<dynamic> _bookmarkBox;
+  @override
+  void initState() {
+    _bookmarkBox = Hive.box("bookmarks");
+
+    super.initState();
   }
 
-  BuildBookmarkItem(BuildContext context, int index) {
+  // @override
+  // Widget build(BuildContext context) {
+  //   List<Widget> tenCards = List.generate(10, (index) {
+  //     return _buildBookmarkItem(context, index + 1);
+  //   });
+  //   return Scaffold(
+  //       body: FutureBuilder(
+  //           future: Hive.openBox("bookmarks"),
+  //           builder: (context, snapshot) {
+  //             if (snapshot.hasError) return Text("An error occurred!");
+  //             if (!snapshot.hasData) return Text("No Bookmarks found");
+  //             return ListView(
+  //               children: <Widget>[
+  //                 for (dynamic data in _bookmarkBox)_buildBookmarkItem(context, snapshot.data)
+  //               ],
+  //             );
+  //           }));
+  // }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _bookmarkBox.isNotEmpty
+          ? ListView.builder(
+              itemCount: _bookmarkBox.length,
+              itemBuilder: (BuildContext context, int index) {
+                return _buildBookmarkItem(context, _bookmarkBox.getAt(index));
+              })
+          : Center(child: Text("No Bookmarks found")),
+    );
+  }
+
+  _buildBookmarkItem(BuildContext context, bookmark) {
+    Movie movie = Movie.fromJson(json.decode(bookmark.toString()));
+    
     return GestureDetector(
-      // onTap: () => Navigator.of(context).push(
-      //   MaterialPageRoute(
-      //     builder: (context) => MovieDetailsPage(movie: filteredList[index]),
-      //   ),
-      // ),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => MovieDetailsPage(movie: movie),
+        ),
+      ),
       child: Container(
         height: 120,
         child: Card(
@@ -40,19 +78,12 @@ class BookmarkPage extends StatelessWidget {
                     borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(10),
                         bottomLeft: Radius.circular(10)),
-                    child: Image.asset(
-                      "images/movie-placeholder.gif",
+                    child: Image.network(
+                      Api().getImageUrl(
+                          path: movie.poster_path, size: PosterSizes.w500),
                       fit: BoxFit.cover,
                       height: 120,
                     ),
-                    //  Image.network(
-                    //   Api().getImageUrl(
-                    //       path:
-                    //           filteredList[index].poster_path,
-                    //       size: PosterSizes.w500),
-                    //   fit: BoxFit.cover,
-                    //   height: 120,
-                    // ),
                   ),
                 ),
               ),
@@ -62,7 +93,7 @@ class BookmarkPage extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
                     children: <Widget>[
-                      Text("Movie $index",
+                      Text("${movie.title}",
                           style: TextStyle(
                               fontSize: 16,
                               color: ColorRes.richBlack,
@@ -73,7 +104,7 @@ class BookmarkPage extends StatelessWidget {
                         height: 8,
                       ),
                       Text(
-                        "Overview",
+                        "${movie.overview}",
                         overflow: TextOverflow.ellipsis,
                         maxLines: 2,
                       ),
@@ -91,7 +122,7 @@ class BookmarkPage extends StatelessWidget {
                             width: 8.0,
                           ),
                           Text(
-                            "6.5",
+                            "${movie.vote_average}",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ],
@@ -105,11 +136,5 @@ class BookmarkPage extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  var _box = Hive.box("app_data");
-  List<int> _getbookmarks() {
-    List<int> bookmarkIds = _box.get("bookmarks");
-    return bookmarkIds;
   }
 }

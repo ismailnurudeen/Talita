@@ -9,6 +9,8 @@ void main() async {
   final dir = await getApplicationDocumentsDirectory();
   Hive.init(dir.path);
   await Hive.openBox("app_data");
+  await Hive.openBox("bookmarks");
+  
   runApp(MovieApp());
 }
 

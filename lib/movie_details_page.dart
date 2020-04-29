@@ -32,7 +32,6 @@ enum loadingState { loading, error, success }
 
 class _MovieDetailsPageState extends State<MovieDetailsPage> {
   GlobalKey<ScaffoldState> globalKey = GlobalKey<ScaffoldState>();
-  bool isBookmarked = false;
   Api api = Api();
   Movie_detail movieDetail;
   List<Video> movieVideos;
@@ -46,6 +45,8 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   bool _showPlayer = false;
   var _videoMetaData;
   var videoId = "";
+  Box<dynamic> _bookmarkBox;
+  bool isBookmarked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +66,9 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
       flags: YoutubePlayerFlags(
           autoPlay: false, controlsVisibleAtStart: true, mute: false),
     );
+
+    _bookmarkBox = Hive.box("bookmarks");
+    isBookmarked = _bookmarkBox.containsKey("${widget.movie.id}");
   }
 
   Future getMovieCastAndCrew() async {
@@ -467,7 +471,7 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                           textAlign: TextAlign.center,
                           style: TextStyle(color: ColorRes.pacificBlue),
                           overflow: TextOverflow.fade,
-                          maxLines:2,
+                          maxLines: 2,
                         ),
                       ],
                     ),
@@ -509,22 +513,21 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
     }
   }
 
-  var _box = Hive.box("app_data");
   _bookmarkMovie() {
-    List bookmarkIds = _box.get("bookmarks") ?? [];
-
-    bookmarkIds.forEach(print);
     if (isBookmarked) {
-      bookmarkIds.remove(widget.movie.id);
+      _bookmarkBox.delete("${widget.movie.id}");
       globalKey.currentState
           .showSnackBar(SnackBar(content: Text("Bookmark Removed")));
     } else {
-      bookmarkIds.add(widget.movie.id);
+      _bookmarkBox.put("${widget.movie.id}", json.encode(widget.movie));
       globalKey.currentState
           .showSnackBar(SnackBar(content: Text("Bookmarked")));
     }
-    _box.put("bookmarks", bookmarkIds);
 
+    if (_bookmarkBox.isNotEmpty)
+      _bookmarkBox.values.forEach((b) {
+        print(b.toString());
+      });
     setState(() {
       isBookmarked = !isBookmarked;
     });
@@ -540,7 +543,6 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
   @override
   void dispose() {
     _controller.dispose();
-    // _box.close();
     super.dispose();
   }
 
