@@ -20,6 +20,8 @@ dependencies:
   hive: ^1.4.1+1
   hive_flutter: ^0.2.1
   path_provider: ^1.6.7
+  rxdart: ^0.24.0
+  # rxdart: ^0.18.0
 
 dev_dependencies:
   flutter_test:

@@ -1,43 +1,38 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
-import 'package:talita/api.dart';
-import 'package:talita/bookmark_page.dart';
-import 'package:talita/image_config.dart';
-import 'package:talita/models/index.dart';
-import 'package:talita/movie_details_page.dart';
-import 'package:talita/resources.dart';
-import 'package:talita/search_page.dart';
+import 'package:talita/src/blocs/movies_bloc.dart';
+import 'package:talita/src/resources/api_provider.dart';
+import 'package:talita/src/ui/bookmark_page.dart';
+import 'package:talita/src/ui/movie_details_page.dart';
+import 'package:talita/src/ui/search_page.dart';
 import 'package:talita/utils.dart';
-import 'models/movie.dart';
-import 'models/movie_response.dart';
+import 'package:talita/src/models/movie.dart';
+import 'package:talita/src/models/movie_response.dart';
 
-class HomePage2 extends StatefulWidget {
+class HomePage extends StatefulWidget {
   @override
-  _HomePage2State createState() => _HomePage2State();
+  _HomePageState createState() => _HomePageState();
 }
 
 enum MovieCategory { popular, top, latest }
 
-class _HomePage2State extends State<HomePage2> {
+class _HomePageState extends State<HomePage> {
   String appBarTitle = "Talita - Best Animated Movies";
   int _currentTabIndex = 0;
 
   List<Movie> movies = [];
-  List<Movie> popularMovies = [];
-  List<Movie> topMovies = [];
-  List<Movie> recentMovies = [];
 
-  Api api = Api();
+  ApiProvider api = ApiProvider();
   @override
   void initState() {
     super.initState();
-    this.getMoviesJson();
-    this.getPopularMoviesJson();
-    this.getTopRatedMoviesJson();
-    this.getLatestMoviesJson();
+
+    bloc.allMovies.forEach((movieResponse) {
+      movies = movieResponse.results;
+    });
+
+    bloc.fetchPopularMovies();
+    bloc.fetchTopRatedMovies();
+    bloc.fetchLatestMovies();
   }
 
   @override
@@ -82,7 +77,7 @@ class _HomePage2State extends State<HomePage2> {
   _moviesTabPage() {
     return ListView(
       children: <Widget>[
-// Popular
+        // Popular
         Padding(
           padding: const EdgeInsets.fromLTRB(16.0, 16.0, 0, 0),
           child: Text(
@@ -94,23 +89,7 @@ class _HomePage2State extends State<HomePage2> {
                 color: ColorRes.greenAccent),
           ),
         ),
-        SizedBox(
-          height: 325,
-          child: popularMovies.isNotEmpty
-              ? ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    return movieItemCard(MovieCategory.popular, index);
-                  },
-                  itemCount: popularMovies.length,
-                )
-              : Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 100, horizontal: 100),
-                  child: CircularProgressIndicator(),
-                ),
-        ),
+        _buildMovieSection(context, MovieCategory.popular),
         // Top rated
         Padding(
           padding: const EdgeInsets.fromLTRB(16.0, 0, 0, 0),
@@ -123,22 +102,7 @@ class _HomePage2State extends State<HomePage2> {
                 color: ColorRes.greenAccent),
           ),
         ),
-        SizedBox(
-          height: 325,
-          child: topMovies.isNotEmpty
-              ? ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, index) {
-                    return movieItemCard(MovieCategory.top, index);
-                  },
-                  itemCount: topMovies.length,
-                )
-              : Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 100, horizontal: 100),
-                  child: CircularProgressIndicator(),
-                ),
-        ),
+        _buildMovieSection(context, MovieCategory.top),
         // Upcoming
         Padding(
           padding: const EdgeInsets.fromLTRB(16.0, 0, 0, 0),
@@ -151,102 +115,54 @@ class _HomePage2State extends State<HomePage2> {
                 color: ColorRes.greenAccent),
           ),
         ),
-        SizedBox(
-          height: 325,
-          child: recentMovies.isNotEmpty
-              ? ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, index) {
-                    return movieItemCard(MovieCategory.latest, index);
-                  },
-                  itemCount: recentMovies.length,
-                )
-              : Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 100, horizontal: 100),
-                  child: CircularProgressIndicator(),
-                ),
-        ),
+        _buildMovieSection(context, MovieCategory.latest),
         SizedBox(height: 16.0)
       ],
     );
   }
 
-  Future<String> getMoviesJson() async {
-    http.Response response = await http.get(
-        Uri.encodeFull(api.getCartoonsEndpoint()),
-        headers: {"Accept": "application/json"});
-    // print(response.body);
-
-    Map<String, dynamic> moviesResponseMap = jsonDecode(response.body);
-    var movieResponse = Movie_response.fromJson(moviesResponseMap);
-
-    setState(() {
-      movies = movieResponse.results;
-    });
-
-    return "Success";
-  }
-
-  Future<String> getPopularMoviesJson() async {
-    http.Response response = await http.get(
-        Uri.encodeFull(api.getPopularCartoonsEndpoint()),
-        headers: {"Accept": "application/json"});
-    print("POPULAR\n\n" + response.body);
-
-    Map<String, dynamic> moviesResponseMap = jsonDecode(response.body);
-    var movieResponse = Movie_response.fromJson(moviesResponseMap);
-
-    setState(() {
-      popularMovies = movieResponse.results;
-    });
-
-    return "Success";
-  }
-
-  Future<String> getLatestMoviesJson() async {
-    http.Response response = await http.get(
-        Uri.encodeFull(api.getLatestCartoonsEndpoint()),
-        headers: {"Accept": "application/json"});
-    print("LATEST\n\n" + response.body);
-
-    Map<String, dynamic> moviesResponseMap = jsonDecode(response.body);
-    var movieResponse = Movie_response.fromJson(moviesResponseMap);
-
-    setState(() {
-      recentMovies = movieResponse.results;
-    });
-
-    return "Success";
-  }
-
-  Future<String> getTopRatedMoviesJson() async {
-    http.Response response = await http.get(
-        Uri.encodeFull(api.getTopRatedCartoonsEndpoint()),
-        headers: {"Accept": "application/json"});
-    print("TOP RATED\n\n" + response.body);
-
-    Map<String, dynamic> moviesResponseMap = jsonDecode(response.body);
-    var movieResponse = Movie_response.fromJson(moviesResponseMap);
-
-    setState(() {
-      topMovies = movieResponse.results;
-    });
-
-    return "Success";
-  }
-
-  movieItemCard(MovieCategory category, int index) {
-    Movie currentMovie;
+  _buildMovieSection(BuildContext context, MovieCategory category) {
+    Stream<Movie_response> movieStream;
     if (category == MovieCategory.popular) {
-      currentMovie = popularMovies[index];
-    } else if (category == MovieCategory.latest) {
-      currentMovie = recentMovies[index];
+      movieStream = bloc.popularMovies;
     } else if (category == MovieCategory.top) {
-      currentMovie = topMovies[index];
+      movieStream = bloc.topRatedMovies;
+    } else if (category == MovieCategory.latest) {
+      movieStream = bloc.latestMovies;
     } else {
-      currentMovie = movies[index];
+      movieStream = bloc.allMovies;
     }
+
+    return StreamBuilder(
+        stream: movieStream,
+        builder: (context, AsyncSnapshot<Movie_response> snapshot) {
+          if (snapshot.hasData) {
+            return SizedBox(
+              height: 325,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  return movieItemCard(snapshot.data.results, index);
+                },
+                itemCount: snapshot.data.results.length,
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Error: " + snapshot.error.toString()));
+          }
+
+          return Container(
+            height: 100,
+            width: 100,
+            padding: const EdgeInsets.symmetric(vertical: 100, horizontal: 100),
+            child: CircularProgressIndicator(),
+          );
+        });
+  }
+
+  movieItemCard(List<Movie> movies, int index) {
+    Movie currentMovie = movies[index];
+
     var releaseDate = Utils.getDateFromString(currentMovie.release_date);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
@@ -281,7 +197,8 @@ class _HomePage2State extends State<HomePage2> {
                 ),
               ),
             ),
-            Text("(${releaseDate.year})",
+            Text(
+              "(${releaseDate.year})",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             Row(
@@ -299,7 +216,7 @@ class _HomePage2State extends State<HomePage2> {
   getMovieImageWidget(String posterPath) {
     if (posterPath != null) {
       return Image.network(
-        api.getImageUrl(path: posterPath, size: PosterSizes.original),
+        api.getImageUrl(path: posterPath, size: PosterSizes.w500),
         fit: BoxFit.cover,
         height: 200,
       );

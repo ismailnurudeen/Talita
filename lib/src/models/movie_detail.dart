@@ -1,5 +1,4 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:talita/models/index.dart';
 import "genre.dart";
 part 'movie_detail.g.dart';
 

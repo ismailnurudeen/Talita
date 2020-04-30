@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:talita/api.dart';
-import 'package:talita/resources.dart';
+import 'package:talita/src/resources/api_provider.dart';
 
-import 'image_config.dart';
-import 'models/movie.dart';
+import 'package:talita/src/models/movie.dart';
+import 'package:talita/utils.dart';
 import 'movie_details_page.dart';
 
 class SearchPage extends StatefulWidget {
@@ -102,7 +101,7 @@ class _SearchPageState extends State<SearchPage> {
                         topLeft: Radius.circular(10),
                         bottomLeft: Radius.circular(10)),
                     child: Image.network(
-                      Api().getImageUrl(
+                      ApiProvider().getImageUrl(
                           path: filteredList[index].poster_path,
                           size: PosterSizes.w500),
                       fit: BoxFit.cover,

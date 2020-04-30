@@ -2,11 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:talita/resources.dart';
-
-import 'api.dart';
-import 'image_config.dart';
-import 'models/movie.dart';
+import 'package:talita/src/resources/api_provider.dart';
+import 'package:talita/src/models/movie.dart';
+import 'package:talita/utils.dart';
 import 'movie_details_page.dart';
 
 class BookmarkPage extends StatefulWidget {
@@ -79,7 +77,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                         topLeft: Radius.circular(10),
                         bottomLeft: Radius.circular(10)),
                     child: Image.network(
-                      Api().getImageUrl(
+                      ApiProvider().getImageUrl(
                           path: movie.poster_path, size: PosterSizes.w500),
                       fit: BoxFit.cover,
                       height: 120,
